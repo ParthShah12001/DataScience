@@ -1,0 +1,2 @@
+{"unit_id": 1, "unit_code": "CS101", "unit_name": "Intro to CS", "unit_capacity": 50}
+{"unit_id": 2, "unit_code": "CS102", "unit_name": "Advance CS", "unit_capacity": 50}

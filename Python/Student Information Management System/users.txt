@@ -1,0 +1,6 @@
+{"user_id": 1, "user_email": "john@example.com", "user_password": "password123", "user_role": "AD", "user_status": "active"}
+{"user_id": 2, "user_email": "jane@example.com", "user_password": "secret456", "user_role": "AD", "user_status": "active"}
+{"user_id": 4, "user_email": "parth@example.com", "user_password": "password123", "user_role": "AD", "user_status": "active"}
+{"user_id": 5, "user_email": "tirth@example.com", "user_password": "password123", "user_role": "ST", "user_status": "active", "enrolled_units": {"CS101": 41}}
+{"user_id": 6, "user_email": "jay@example.com", "user_password": "password123", "user_role": "TA", "user_status": "active", "teach_units": ["CS101"]}
+{"user_id": 70489, "user_email": "alison@example.com", "user_password": "password123", "user_role": "ST", "user_status": "active", "enrolled_units": {}}
