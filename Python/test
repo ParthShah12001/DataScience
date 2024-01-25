@@ -1,0 +1,72 @@
+// Extend the ModalButton model to include a default value for the text input
+var TextModalButton = ModalButton.extend({
+    defaultValue: "",
+    getTextValue: function () {
+        return this.get('textValue') || this.defaultValue;
+    }
+});
+
+// Extend the ModalButtonView to include a text input in the button
+var TextModalButtonView = ModalButtonView.extend({
+    template: _.template('<input type="text" id="text-input">'),
+    events: {
+        'click': 'onClick'
+    },
+    onClick: function () {
+        var textValue = this.$el.find('#text-input').val();
+        this.model.set('textValue', textValue);
+        ModalButtonView.prototype.onClick.apply(this, arguments);
+    },
+    onRender: function () {
+        ModalButtonView.prototype.onRender.apply(this, arguments);
+        // Set the default value for the text input if available
+        var defaultValue = this.model.defaultValue;
+        if (defaultValue) {
+            this.$el.find('#text-input').val(defaultValue);
+        }
+    }
+});
+
+// Extend the ModalButtons collection to use the TextModalButton model
+var TextModalButtons = ModalButtons.extend({
+    model: TextModalButton
+});
+
+// Extend the ModalButtonCollectionView to use the TextModalButtonView view
+var TextModalButtonCollectionView = ModalButtonCollectionView.extend({
+    childView: TextModalButtonView
+});
+
+// Extend the ModalLayout to use the TextModalButtons collection and TextModalButtonCollectionView view
+var TextModalLayout = ModalLayout.extend({
+    initialize: function (options) {
+        TextModalLayout.__super__.initialize.apply(this, arguments);
+        this.collection = new TextModalButtons(options.buttons);
+    },
+    onRender: function () {
+        TextModalLayout.__super__.onRender.apply(this, arguments);
+        this.showChildView("footer", new TextModalButtonCollectionView({
+            collection: this.collection
+        }));
+    },
+    validate: function () {
+        var isValid = TextModalLayout.__super__.validate.apply(this, arguments);
+        if (isValid) {
+            var textValue = this.getRegion("body").currentView.$el.find('#text-input').val();
+            this.selectedValue = { index: this.selectedValue, textValue: textValue };
+        }
+        return isValid;
+    }
+});
+
+// Function to show the new TextModalDialog
+exports.ShowTextModal = function (options) {
+    options = _.extend({}, options, {
+        view: new DialogView(options),
+        deferred: $.Deferred(),
+        collection: new TextModalButtons(options.buttons)
+    });
+    var modalLayoutView = new TextModalLayout(options);
+    modalLayoutView.render();
+    return options.deferred.promise();
+};
