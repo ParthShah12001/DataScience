@@ -27,6 +27,35 @@ var TextModalButtonView = ModalButtonView.extend({
     }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+exports.ShowTextModal({
+    text: "Enter your text:",
+    title: "Text Input Dialog",
+    buttons: [
+        { text: "OK", isCancel: false },
+        { text: "Cancel", isCancel: true }
+    ]
+}).done(function (result) {
+    // result will be an object with properties 'index' and 'textValue'
+    if (!result.isCancel) {
+        console.log("Text entered:", result.textValue);
+    } else {
+        console.log("Dialog canceled");
+    }
+});
+
 // Extend the ModalButtons collection to use the TextModalButton model
 var TextModalButtons = ModalButtons.extend({
     model: TextModalButton
