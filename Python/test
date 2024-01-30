@@ -1,73 +1,81 @@
-var PopupView = Backbone.View.extend({
-  el: '#popup-container',
-
-  template: _.template(`
-    <div class="popup">
-      <label for="popup-input">Enter Message:</label>
-      <input type="text" id="popup-input" />
-      <button id="cancel-button">Cancel</button>
-      <button id="ok-button" disabled>OK</button>
+<script id="dialogTemplateNew" type="text/template">
+    <div class="decision-text">
+        <label for="enterreason">Please fill in the reason</label>
+        <input type="text" name="enterreason"/>
     </div>
-  `),
+</script> 
 
-  events: {
-    'input #popup-input': 'updateOkButtonState',
-    'click #cancel-button': 'cancel',
-    'click #ok-button': 'ok'
-  },
 
-  initialize: function() {
-    this.render();
-  },
-
-  render: function() {
-    this.$el.html(this.template);
-    return this;
-  },
-
-  updateOkButtonState: function() {
-    var inputText = this.$('#popup-input').val();
-    this.$('#ok-button').prop('disabled', inputText.trim() === '');
-  },
-
-  cancel: function() {
-    this.trigger('popup:cancel');
-    this.remove();
-  },
-
-  ok: function() {
-    var inputText = this.$('#popup-input').val();
-    this.trigger('popup:ok', inputText);
-    this.remove();
-  }
+var DialogViewNew = Marionette.View.extend({
+    serializeData: function () {
+        return { text: this.options.text };
+    },
+    template: "#dialogTemplateNew"
 });
 
 
+exports.ShowModalNew = function (options) {
+    var initOptions = options || {};
+
+    // create a new div under <body> for the modal - it will be deleted when the view is destroyed
+    var el = $("<section name=\"modalContainer\" class=" + initOptions.containerClass + "></section>");
+    $("body").append(el);
+    if (initOptions.containerClass === "result-modal") {
+        $(".result-modal").addClass('show-toast');
+        setTimeout(function () {
+            $(".result-modal").remove();
+            $('.modal-backdrop').remove();
+        }, 5000);
+    }
+    _.extend(initOptions,
+        {
+            el: el,
+            view: initOptions.view || new DialogViewNew(initOptions),
+            deferred: $.Deferred(),
+            collection: new ModalButtons(initOptions.buttons)
+        });
+    var modalLayoutView = new ModalLayout(initOptions);
+    modalLayoutView.render();
+
+    return initOptions.deferred.promise();
+};
+
+
+exports.ShowDecisionModalNew = function (options) {
+    options = _.extend({
+        buttons: [
+            {
+                text: options.cancelBtnText || Labels.No
+            },
+            {
+                text: options.okBtnText || Labels.OK
+            }
+        ]
+    },
+        options);
+    var deferred = $.Deferred();
+
+    exports.ShowModalNew(options)
+        .done(function (btnIndex, options) {
+            // we'll pass along the "this" context intact
+            if (btnIndex > 0) {
+                deferred.resolveWith(this, arguments);
+            } else {
+                deferred.rejectWith(this, arguments);
+            }
+        });
+
+    return deferred.promise();
+};
 
 
 
+ Dialog.ShowDecisionModalNew({
+                    containerClass: "decision-modal",
+                    context: this,
+                    okBtnText: Labels.Continue,
+                    cancelBtnText: Labels.Cancel,
+                }).done(function () {
+                    console.log("Hi")
 
-
-
-
-
-
-
-
-
-
-// Trigger the popup on button click
-$('#open-popup-button').on('click', function() {
-  var popup = new PopupView();
-  $('body').append(popup.el);
-
-  popup.on('popup:ok', function(value) {
-    // Do something with the entered value
-    console.log('Entered Message:', value);
-  });
-
-  popup.on('popup:cancel', function() {
-    // Handle cancel event
-    console.log('Popup cancelled');
-  });
-});
+                });
