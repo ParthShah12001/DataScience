@@ -212,3 +212,33 @@ var ModalLayout = Marionette.View.extend({
         }
     }
 });
+
+var ModalButtonView = Marionette.View.extend({
+    tagName: "button",
+    template: false,
+    className: "btn btn-secondary",
+    attributes: {
+        type: "button"
+    },
+    events: {
+        click: "onClick"
+    },
+    modelEvents: {
+        "change:isDisabled": "setEnabledState"
+    },
+    onRender: function () {
+        this.$el.text(this.model.get("text"));
+
+        this.setEnabledState(this.model);
+
+        this.model.isDefault() &&
+            !this.model.isCancel() && //Check for non cancel button
+            this.$el.removeClass("btn-secondary").addClass("btn-primary").addClass("disabled");
+    },
+    onClick: function (buttonModel) {
+        this.model.set("isClicked", true);
+    },
+    setEnabledState: function (buttonModel) {
+        this.$el.prop("disabled", buttonModel.get("isDisabled"));
+    }
+});
