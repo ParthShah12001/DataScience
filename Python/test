@@ -7,10 +7,21 @@
 
 
 var DialogViewNew = Marionette.View.extend({
+    template: "#dialogTemplateNew",
+    ui: {
+        textbox:"input"
+    },
+    events: {
+        "change @ui.textbox":"onInputChange"
+    },
+
+    onInputChange: function () {
+        var reason = this.$("input").val().trim();
+    },
     serializeData: function () {
         return { text: this.options.text };
     },
-    template: "#dialogTemplateNew"
+    
 });
 
 
