@@ -79,3 +79,136 @@ exports.ShowDecisionModalNew = function (options) {
                     console.log("Hi")
 
                 });
+
+
+var ModalLayout = Marionette.View.extend({
+    template: "#modalDialogLayoutTemplate",
+    selectedValue: 0,
+    ui: {
+        title: ".modal-title",
+        body: "#body",
+        footer: ".modal-footer",
+        modal: "section.modal",
+        icon: "#icon",
+        topPortion: ".row",
+        header: ".modal-header"
+    },
+    regions: {
+        header: ".modal-header",
+        body: "@ui.body",
+        footer: "@ui.footer"
+    },
+    events: {
+        "hidden.bs.modal @ui.modal": "destroy"
+    },
+    collectionEvents: {
+        "change:isClicked": "buttonClick"
+    },
+    childViewEvents: {
+        destroy: "onChildDestroy"
+    },  
+    initialize: function (options) {
+        this.initialOverflow = options.isDrawer ? "" : $("body").css("overflow");
+
+        if ($.isFunction(options.callback)) {
+            this.callback = options.callback;
+        }
+        this.context = options.context;
+    },
+    onRender: function () {
+        var notification = this.options.notificationType || exports.NotificationTypes.none;
+        if (notification.iconStyle) {
+            this.ui.icon.addClass(notification.iconStyle);
+        } else {
+            this.ui.body.removeClass("col-xs-10");
+            this.ui.body.addClass("container-fluid");
+        }
+
+        this.options.isDrawer &&
+            this.ui.modal.addClass("drawer");
+
+        if(this.options.view)
+            this.showChildView("body", this.options.view, { buttons: this.collection });
+
+        this.options.title &&
+            this.ui.title.text(this.options.title);
+
+        if (this.options.skipHeader || !this.options.headerView) {
+            if (!this.options.showDefaultHeader)
+                this.ui.header.hide();
+        } else {
+            this.getRegion("header").empty();
+            this.getRegion("header").show(this.options.headerView);
+        }
+
+        if (this.options.skipFooter) {
+            this.ui.footer.hide();
+        } else {
+            this.ui.footer.show();
+        }
+
+        this.collection &&
+            this.showChildView("footer", new ModalButtonCollectionView({
+                collection: this.collection
+            }));
+
+        this.ui.modal.modal({ show: true, backdrop: this.options.showBackdrop });
+    },
+    onDestroy: function () {
+        if (!this.options.deferred) {
+            return;
+        }
+
+        var context = this.options.context || this.options.view || this;
+
+        this.options.deferred.resolveWith(context, [this.selectedValue, this.options]);
+    },
+    // calling destroy(returnValue) will allow you to propagate the return value to your
+    // calling view by way of the $.Deferred return value. This allows you to notify
+    // the calling view how the modal was resolved so you may branch accordingly.
+    onChildDestroy: function (childView, returnValue) {
+        returnValue && (this.selectedValue = returnValue);
+        this.close();
+    },
+    buttonClick: function (buttonModel) {
+        if (!buttonModel.get("isClicked")) {
+            return;
+        }
+        this.selectedValue = buttonModel.getIndex();
+        if (this.validate()) {
+            this.close();
+        } else {
+            buttonModel.set("isClicked", false);
+        }
+    },
+    // triggers validate event (with an onValidate function call as well) containing
+    // an option "cancel" that, if true, will cancel closing the dialog. The buttonIndex
+    // is provided to allow the user to determine which button was pushed.
+    validate: function () {
+        if (!this.getRegion("body").currentView) {
+            return true;
+        }
+
+        var options = {
+            cancel: false,
+            buttonIndex: this.selectedValue,
+            source: this.getRegion("body").currentView
+        }
+
+        this.getRegion("body").currentView.triggerMethod("validate", options);
+        return !options.cancel;
+    },
+    close: function () {
+        if (this.isAttached()) {
+            this.ui.modal.modal("hide");
+            $("body").css("overflow", this.initialOverflow);
+        }
+    },
+    templateContext: function () {
+        var id = (this.options.id ? this.options.id : "modelDialog");
+        return {
+            title: this.getOption("title"),
+            id:id
+        }
+    }
+});
